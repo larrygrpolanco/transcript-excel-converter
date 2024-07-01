@@ -30,18 +30,17 @@ def read_docx(file):
     return "\n".join(full_text)
 
 
-# Function to check transcript formatting
-def is_correct_format(transcript):
-    lines = transcript.split("\n")
-    for line in lines:
-        if line.strip() == "":  # Skip empty lines
-            continue
-        if not line.startswith("*") or ":" not in line:
-            return False
-        parts = line.split(":")
-        if len(parts) < 2 or not parts[1].strip().endswith((".", "?", "!", ";")):
-            return False
-    return True
+# Function to check if transcript processing was successful
+def is_processing_successful(transcript):
+    try:
+        processed_data = process_transcript(transcript)
+        return (
+            processed_data is not None
+            and isinstance(processed_data, pd.DataFrame)
+            and not processed_data.empty
+        )
+    except:
+        return False
 
 
 # Stage 1 Page
@@ -57,22 +56,26 @@ def main():
     """
     )
 
+    st.subheader("Upload Transcript Files")
     uploaded_files = st.file_uploader(
-        "Upload Transcript Files", type="docx", accept_multiple_files=True
+        "Upload transcripts", type="docx", accept_multiple_files=True
     )
 
     if uploaded_files:
         conversion_data = {"File Name": [], "Successfully Converted": []}
 
-        for uploaded_file in uploaded_files:
-            file_name = uploaded_file.name
-            transcript = read_docx(uploaded_file)
-            if is_correct_format(transcript):
-                conversion_data["File Name"].append(file_name)
-                conversion_data["Successfully Converted"].append("Yes")
-            else:
-                conversion_data["File Name"].append(file_name)
-                conversion_data["Successfully Converted"].append("No")
+        if uploaded_files:
+            conversion_data = {"File Name": [], "Successfully Converted": []}
+
+            for uploaded_file in uploaded_files:
+                file_name = uploaded_file.name
+                transcript = read_docx(uploaded_file)
+                if is_processing_successful(transcript):
+                    conversion_data["File Name"].append(file_name)
+                    conversion_data["Successfully Converted"].append("Yes")
+                else:
+                    conversion_data["File Name"].append(file_name)
+                    conversion_data["Successfully Converted"].append("No")
 
         conversion_df = pd.DataFrame(conversion_data)
 
