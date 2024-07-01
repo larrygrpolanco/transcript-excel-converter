@@ -1,3 +1,136 @@
 Link to cohort 1 raw excel transcripts:
 https://usf.box.com/s/oq5s0ppvw3dviwx4jlsyq6inmgrtldgx
 
+
+I'm reworking a website I made on streamlit. I want to start from scratch. Let me explain what I need it to do and let's brainstorm ways to make this easy to use, user-friendly and functional. Do not write any code yet let us discuss everything that needs to be decided then let's tackle each part piece by piece.
+
+The website is a transcript converter. I am a research assistant working on a bilingual one-on-one scripted vocabulary lesson study. The point of this website is to convert the lesson transcripts into excel sheets which we can hand to other research assistants to conduct variable coding.
+
+I want this to happen in two stages, first converting the transcript into a "raw" excel transcript. This is important in order to check that the excel conversation went well and that the transcript was properly formatted. I would like some sort of format check here too. To insure the transcriber followed the formatting guide. The "raw" excel file will have 3 columns 
+[Speaker]	[Teacher (T) or Child (C)]	[Utterance/Idea Units]. The transcript should look like this 
+`
+*33308:	There you go. 
+*33308:	Awesome. 
+*33308:	We all are ready for you.
+*33308:	I swear this time. 
+*33308:	Ok.
+*33308:	So let me start by asking you how was school since all this craziness?
+*444001:	Good
+*33308:	Good?
+
+In the speaker column goes the number after the * so 33308 in this example. In Teacher (T) or Child (C) goes a T if the speaker number starts with a 3 and a C if the number starts with 4. The text after the : and tab goes in the Utterance/Idea Units.
+
+Here are the guidelines for formatting the transcript which should have been followed, but mistakes happen during transcriptions. Let us assume they are followed.
+1. All main lines start with a *, the speaker ID, a colon and a tab.
+2. End every line with a punctuation mark and only use a line break (enter key) if it is a new main line.
+
+Last time I did this it helped to flatten the text before converting it to excel.
+
+
+The second stage will involve taking the raw excel file and applying a template to it. This should allow the user to upload their own template with these 3 columns, [Speaker]	[Teacher (T) or Child (C)]	[Utterance/Idea Units], already there but empty, along with more columns for coding.
+
+Here is an example of an old template
+Speaker	Teacher (T) or Child (C)	Utterance/Idea Units	Child Id	Instructor ID	Speaker (Child 1, Teacher 2)	Week	Day	Lesson: W2D1=3; W2D2= 4; W4D1=7; W4D2=8; W6D1=11; W6D2=12	Condition Bilingual = 1; Monolingual = 0	Total Utterances	Technology	Exclude	Deep Coded	Language	Before	During	After	Form	Comment	Directive	Question	Cloze prompt	Repeat_Recast_Extend	T_MinimumResponseRequired	Single word	Multiple words	T_QuestionWording	Wh- basic	Why	How	Auxiliary-fronted	Yes_No	Turn-taking	T_AnswerKnown	Real	Test	C_ChildUtterance	Single word	Multiple words	C_TopicControl	T control	C control	C_ResponseAccuracy	Accurate	Inaccurate	No response	N/A	GeneralTopic	Meaning	Behavior	Behavior Correction 	AttentionDirecting	TeacherPraise	Sequence_Temporal	Compare_Contrast	Cognition	Desires_Preferences	Feelings_Emotions	Judgments_Perspectives	CausalEffects_ProblemSolve	Predictions_Forecast	DefineVocabulary	MakingConnections	BackgroundKnowledge	ActOut_PretendPlay
+											X	X	X	English	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X	X
+
+
+It gets more complicated as there are multiple sheets, data validation with dropdowns, formulas, and color coding.
+
+For now let us focus on the bigger picture and brainstorm a plan
+
+
+Stage 1: Converting Transcript to Raw Excel
+Key Functionalities:
+
+File Upload:
+
+Users can upload a text file containing the transcript.
+Ensure the file format is correct (e.g., .txt).
+Transcript Processing:
+
+Parse the transcript to extract speaker IDs, determine if the speaker is a teacher or child, and extract utterances.
+Flatten the text if necessary to ensure consistent formatting.
+Format Check:
+
+Implement a check to ensure that each line starts with *, followed by a speaker ID, colon, tab, and ends with a punctuation mark.
+Provide feedback if any formatting issues are found.
+Excel Conversion:
+
+Convert the processed transcript into an Excel file with columns: [Speaker], [Teacher (T) or Child (C)], [Utterance/Idea Units].
+Allow the user to download the raw Excel file.
+User Interface:
+
+Simple and intuitive file upload interface.
+Clear instructions and feedback on the processing status.
+Download button for the raw Excel file.
+Stage 2: Applying Template to Raw Excel
+Key Functionalities:
+
+Template Upload:
+
+Users can upload an Excel template file.
+Ensure the template has the required columns: [Speaker], [Teacher (T) or Child (C)], [Utterance/Idea Units], along with additional coding columns.
+Template Application:
+
+Merge the raw Excel data with the user-provided template.
+Ensure that the data fits correctly into the template columns.
+Handle multiple sheets, data validation, formulas, and color coding in the template.
+Excel Validation:
+
+Validate that the template is correctly formatted and compatible with the raw Excel file.
+Provide feedback if any issues are found.
+User Interface:
+
+Simple and intuitive template upload interface.
+Clear instructions and feedback on the processing status.
+Download button for the finalized Excel file with the applied template.
+User-Friendly Features
+Instructions and Documentation:
+
+Clear and concise instructions on each step.
+Examples of correctly formatted transcripts and templates.
+Error Handling and Feedback:
+
+Real-time feedback on file uploads and processing status.
+Detailed error messages with guidance on how to fix issues.
+Visual Design:
+
+Clean and modern UI design.
+Responsive layout to ensure usability on various devices.
+Streamlining the Process:
+
+Minimize the number of steps the user needs to take.
+Automate as much of the process as possible while keeping it transparent.
+High-Level Workflow
+Homepage:
+
+Welcome message and brief description of the tool.
+Navigation to the two stages: Transcript to Raw Excel and Apply Template.
+Stage 1 Page:
+
+File upload section for the transcript.
+Instructions on the transcript format.
+Button to process the transcript.
+Feedback section showing any formatting issues.
+Download button for the raw Excel file.
+Stage 2 Page:
+
+File upload section for the raw Excel file and the template.
+Instructions on the template format.
+Button to apply the template.
+Feedback section showing any issues with the template.
+Download button for the finalized Excel file.
+Next Steps
+UI/UX Design:
+
+Create wireframes for each page to visualize the layout and user flow.
+Gather feedback on the design to ensure it meets user needs.
+Backend Planning:
+
+Define the data processing logic for transcript parsing and Excel conversion.
+Plan the integration of file upload and download functionality.
+Implementation:
+
+Start with the file upload and processing logic for Stage 1.
+Implement format checks and feedback mechanisms.
+Move on to Stage 2, focusing on template application and validation.
