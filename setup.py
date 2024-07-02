@@ -20,7 +20,7 @@ setup(
     description="An application for applying Excel templates to transcript data for a research project.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/excel_template_app",
+    url="https://github.com/larrygrpolanco/transcript-excel-converter",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
