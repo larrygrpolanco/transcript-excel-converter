@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 from io import BytesIO
+from openpyxl import load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.worksheet.datavalidation import DataValidation
 
 
 # Function to read Excel file and return DataFrame
@@ -8,13 +11,35 @@ def read_excel(file):
     return pd.read_excel(file)
 
 
-# Function to merge raw data with template
-def merge_with_template(raw_data, template):
-    merged_data = template.copy()
-    merged_data["Speaker"] = raw_data["Speaker"]
-    merged_data["Teacher (T) or Child (C)"] = raw_data["Teacher (T) or Child (C)"]
-    merged_data["Utterance/Idea Units"] = raw_data["Utterance/Idea Units"]
-    return merged_data
+# Function to apply template to raw data while preserving formulas and data validation
+def apply_template_with_formulas_and_validation(raw_data, template_file):
+    # Load the template workbook and get the first sheet
+    wb = load_workbook(
+        template_file, data_only=False
+    )  # Load without evaluating formulas
+    ws = wb.active
+
+    # Store existing data validations
+    data_validations = list(ws.data_validations.dataValidation)
+
+    # Convert raw_data DataFrame to rows
+    raw_data_rows = dataframe_to_rows(raw_data, index=False, header=False)
+
+    # Write raw_data to the template sheet, starting from the second row to preserve headers/formulas
+    for i, row in enumerate(raw_data_rows, start=2):
+        for j, value in enumerate(row, start=1):
+            ws.cell(row=i, column=j, value=value)
+
+    # Restore data validations
+    for dv in data_validations:
+        ws.add_data_validation(dv)
+
+    # Save the updated workbook to a BytesIO object
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return output
 
 
 # Stage 2 Page
@@ -34,9 +59,7 @@ def main():
     template_file = st.file_uploader("Upload Template File", type="xlsx")
 
     if template_file:
-        template = read_excel(template_file)
         st.write("Template uploaded successfully!")
-        st.write(template)
 
         st.subheader("Upload Raw Excel File")
         raw_file = st.file_uploader("Upload Raw Excel File", type="xlsx")
@@ -46,43 +69,20 @@ def main():
             st.write(f"Raw Excel file '{raw_file.name}' uploaded successfully!")
             st.write(raw_data)
 
-            merged_data = merge_with_template(raw_data, template)
-            st.write("Merged Data:")
-            st.write(merged_data)
+            try:
+                applied_data_output = apply_template_with_formulas_and_validation(
+                    raw_data, template_file
+                )
+                st.write("Data with Applied Template:")
 
-            output = BytesIO()
-            merged_data.to_excel(output, index=False)
-            output.seek(0)
-
-            st.download_button(
-                label="Download Merged Excel File",
-                data=output,
-                file_name=f"merged_{raw_file.name}",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
-
-            # Commented out batch downloading for troubleshooting
-            # merged_files = []
-            # for raw_file in raw_files:
-            #     raw_data = read_excel(raw_file)
-            #     merged_data = merge_with_template(raw_data, template)
-            #     merged_files.append((raw_file.name, merged_data))
-
-            # if merged_files:
-            #     with zipfile.ZipFile("merged_files.zip", "w") as zf:
-            #         for file_name, df in merged_files:
-            #             output = BytesIO()
-            #             df.to_excel(output, index=False)
-            #             output.seek(0)
-            #             zf.writestr(file_name, output.read())
-
-            #     with open("merged_files.zip", "rb") as f:
-            #         st.download_button(
-            #             label="Download Merged Files",
-            #             data=f,
-            #             file_name="merged_files.zip",
-            #             mime="application/zip"
-            #         )
+                st.download_button(
+                    label="Download Excel File with Applied Template",
+                    data=applied_data_output,
+                    file_name=f"applied_{raw_file.name}",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+            except Exception as e:
+                st.error(f"Error applying template: {e}")
 
 
 if __name__ == "__main__":
