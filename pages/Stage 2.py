@@ -1,58 +1,49 @@
 import streamlit as st
 import pandas as pd
-from io import BytesIO
-from openpyxl import load_workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
-from openpyxl.worksheet.datavalidation import DataValidation
+import xlwings as xw
+import tempfile
+import os
 
 
-# Function to read Excel file and return DataFrame
 def read_excel(file):
     return pd.read_excel(file)
 
 
-# Function to apply template to raw data while preserving formulas and data validation
-def apply_template_with_formulas_and_validation(raw_data, template_file):
-    # Load the template workbook and get the first sheet
-    wb = load_workbook(
-        template_file, data_only=False
-    )  # Load without evaluating formulas
-    ws = wb.active
+def apply_template_with_formulas_and_validation(
+    raw_data, template_file_path, output_file_path
+):
+    try:
+        with xw.App(visible=False) as app:
+            template_wb = app.books.open(template_file_path)
+            template_ws = template_wb.sheets[0]
 
-    # Store existing data validations
-    data_validations = list(ws.data_validations.dataValidation)
+            # Convert raw_data DataFrame to list of lists
+            raw_data_list = raw_data.values.tolist()
 
-    # Convert raw_data DataFrame to rows
-    raw_data_rows = dataframe_to_rows(raw_data, index=False, header=False)
+            # Write raw_data to the template sheet, starting from the second row to preserve headers/formulas
+            for i, row in enumerate(raw_data_list, start=2):
+                template_ws.range(f"A{i}").value = row
 
-    # Write raw_data to the template sheet, starting from the second row to preserve headers/formulas
-    for i, row in enumerate(raw_data_rows, start=2):
-        for j, value in enumerate(row, start=1):
-            ws.cell(row=i, column=j, value=value)
+            # Save the updated workbook to the output file path
+            template_wb.save(output_file_path)
+            template_wb.close()
 
-    # Restore data validations
-    for dv in data_validations:
-        ws.add_data_validation(dv)
-
-    # Save the updated workbook to a BytesIO object
-    output = BytesIO()
-    wb.save(output)
-    output.seek(0)
-
-    return output
+        return output_file_path
+    except Exception as e:
+        st.error(f"Error during applying template: {e}")
+        return None
 
 
-# Stage 2 Page
 def main():
     st.title("Stage 2: Apply Template to Raw Excel")
 
     st.markdown(
         """
-    ### Instructions:
-    1. Upload the Excel template file first.
-    2. Then upload a raw Excel file from Stage 1.
-    3. Apply the template to the file and download it.
-    """
+        ### Instructions:
+        1. Upload the Excel template file first.
+        2. Then upload a raw Excel file from Stage 1.
+        3. Apply the template to the file and download it.
+        """
     )
 
     st.subheader("Upload Template File")
@@ -67,22 +58,41 @@ def main():
         if raw_file:
             raw_data = read_excel(raw_file)
             st.write(f"Raw Excel file '{raw_file.name}' uploaded successfully!")
-            st.write(raw_data)
 
-            try:
-                applied_data_output = apply_template_with_formulas_and_validation(
-                    raw_data, template_file
-                )
-                st.write("Data with Applied Template:")
+            with st.expander("Preview Raw Excel File"):
+                st.write(raw_data)
 
-                st.download_button(
-                    label="Download Excel File with Applied Template",
-                    data=applied_data_output,
-                    file_name=f"applied_{raw_file.name}",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                )
-            except Exception as e:
-                st.error(f"Error applying template: {e}")
+            output_path = "output.xlsx"
+
+            if st.button("Apply Template"):
+                try:
+                    # Save the template file to a temporary path
+                    with tempfile.NamedTemporaryFile(
+                        delete=False, suffix=".xlsx"
+                    ) as temp_template_file:
+                        temp_template_file.write(template_file.read())
+                        temp_template_file_path = temp_template_file.name
+
+                    applied_data_output_path = (
+                        apply_template_with_formulas_and_validation(
+                            raw_data, temp_template_file_path, output_path
+                        )
+                    )
+
+                    if applied_data_output_path:
+                        with open(applied_data_output_path, "rb") as f:
+                            st.download_button(
+                                label="Download Excel File with Applied Template",
+                                data=f.read(),
+                                file_name=f"SABR_{raw_file.name}",
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            )
+                except Exception as e:
+                    st.error(f"Error applying template: {e}")
+                finally:
+                    # Clean up temporary files
+                    if os.path.exists(temp_template_file_path):
+                        os.remove(temp_template_file_path)
 
 
 if __name__ == "__main__":
