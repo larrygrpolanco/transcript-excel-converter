@@ -39,6 +39,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+Instructions.txt
 
 # Environments
 .env
