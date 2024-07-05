@@ -134,7 +134,7 @@ class ExcelTemplateApp:
             try:
                 raw_data = pd.read_excel(raw_file)
                 base_name = os.path.basename(raw_file)
-                save_path = os.path.join(save_dir, f"processed_{base_name}")
+                save_path = os.path.join(save_dir, f"{base_name}")
 
                 success = self.apply_template_with_direct_save(
                     raw_data, template_file, save_path
@@ -180,7 +180,7 @@ class ExcelTemplateApp:
                 transcript = self.read_docx(file)
                 if self.is_processing_successful(transcript):
                     processed_data = self.process_transcript(transcript)
-                    output_file = os.path.splitext(file)[0] + "_processed.xlsx"
+                    output_file = os.path.splitext(file)[0] + ".xlsx"
                     processed_data.to_excel(output_file, index=False)
                     self.update_status_text(
                         f"Successfully processed: {os.path.basename(file)}", "success"
@@ -261,4 +261,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
